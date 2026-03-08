@@ -62,10 +62,6 @@
         (borrar)="borradoProducto($event)"> 
       </app-card-producto>
     </div>
-
-    <div *ngIf="listaFiltrada.length === 0 && !loading" class="text-center py-20 text-gray-400">
-      <p class="text-lg font-medium italic">No se encontraron productos en esta sección.</p>
-    </div>
   </main>
 
   <app-formulario-producto 

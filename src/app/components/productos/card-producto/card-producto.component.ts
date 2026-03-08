@@ -22,11 +22,12 @@ export class CardProductoComponent {
     this.editar.emit(this.infoProducto);
   }
 
-  // Función para borrar con validación de seguridad
-  onBorrar() {
-    const confirmar = confirm(`¿Estás seguro de que deseas eliminar "${this.infoProducto.nombre}"?`);
-    if (confirmar) {
-      this.borrar.emit(this.infoProducto.id);
-    }
+  // Función para borrar: Ahora solo avisa al padre sin preguntar nada aquí
+  onBorrar(event: Event) {
+    // Frenamos el clic para que no se active el clic de la tarjeta completa
+    event.stopPropagation();
+    
+    // Simplemente emitimos el ID. La confirmación (confirm) se hace en el padre.
+    this.borrar.emit(this.infoProducto.id);
   }
 }

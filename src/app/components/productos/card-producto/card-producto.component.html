@@ -28,7 +28,7 @@
     </div>
   </div>
 
-    <div class="flex border-t border-gray-100 bg-white">
+  <div class="flex border-t border-gray-100 bg-white">
     <button 
       (click)="onEditar()" 
       class="w-1/2 py-3 bg-white text-[#739883] hover:bg-gray-50 transition-all flex justify-center items-center active:scale-95 border-r border-gray-100"
@@ -39,7 +39,7 @@
     </button>
 
     <button 
-      (click)="onBorrar()" 
+      (click)="onBorrar($event)" 
       class="w-1/2 py-3 bg-white text-[#739883] hover:bg-gray-50 transition-all flex justify-center items-center active:scale-95"
       title="Eliminar producto">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">

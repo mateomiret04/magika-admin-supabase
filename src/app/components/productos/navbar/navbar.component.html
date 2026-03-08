@@ -1,0 +1,60 @@
+<nav class="fixed top-0 left-0 w-full z-[110] flex items-center justify-between px-8 py-2 shadow-xl transition-all duration-500"
+     [class.bg-[#739883]]="!isScrolled"
+     [class.bg-[#739883]/85]="isScrolled"
+     [class.backdrop-blur-md]="isScrolled"
+     [style.height]="isScrolled ? '75px' : '85px'">
+  
+  <div class="flex items-center gap-6">
+    <div class="flex items-center">
+      <img src="/18.png" 
+           alt="Magika Logo" 
+           [style.height]="isScrolled ? '55px' : '65px'"
+           style="display: block; object-fit: contain; width: auto; transition: all 0.3s ease; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.1));">
+    </div>
+    
+    <div class="hidden sm:flex items-center gap-4">
+      <div class="h-10 w-[1px] bg-white/30 transition-all" [class.h-8]="isScrolled"></div>
+      <span class="text-white/90 text-[11px] font-light tracking-[0.2em] uppercase">
+        Pagina administrativa
+      </span>
+    </div>
+  </div>
+
+  <div class="relative">
+    <button (click)="toggleMenu($event)" 
+            class="group relative flex items-center justify-center p-2 text-white transition-all duration-300 ease-in-out focus:outline-none">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+           fill="none" 
+           viewBox="0 0 24 24" 
+           stroke-width="2" 
+           stroke="currentColor" 
+           class="w-7 h-7 transition-transform duration-300 group-hover:scale-110">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
+    </button>
+
+    <div *ngIf="menuAbierto" 
+         class="absolute right-0 mt-4 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[120] animate-fade-in origin-top-right">
+      
+      <button (click)="accionAgregar()" 
+              class="w-full text-left px-5 py-3 text-sm font-medium text-gray-600 hover:bg-[#739883]/10 hover:text-[#739883] transition-colors flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Agregar Producto
+      </button>
+
+      <div class="mx-4 my-1 border-t border-gray-50"></div>
+
+      <button (click)="salir()" 
+              class="w-full text-left px-5 py-3 text-sm font-medium text-red-400 hover:bg-red-50 transition-colors flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+        </svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div [style.height]="isScrolled ? '75px' : '85px'" class="transition-all duration-500"></div>

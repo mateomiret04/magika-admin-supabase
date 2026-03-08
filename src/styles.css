@@ -1,0 +1,30 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Animación Cíclica de Magika */
+@keyframes revealLogoLoop {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    clip-path: inset(0 0 0 0); /* Totalmente visible */
+    opacity: 1;
+  }
+  80% {
+    opacity: 0; /* Desaparece suavemente antes de reiniciar */
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+}
+
+.animate-magika-reveal {
+  /* infinite: hace que no pare nunca |2s: duración de cada ciclo */
+  animation: revealLogoLoop 2s ease-in-out infinite;
+}

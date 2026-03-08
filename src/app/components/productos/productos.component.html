@@ -1,0 +1,77 @@
+<div *ngIf="loading && listaProductos.length === 0" class="fixed inset-0 flex flex-col items-center justify-center bg-[#739883] z-[100]">
+  <div class="relative">
+    <img 
+      src="12.png" 
+      alt="Cargando Magika" 
+      class="h-40 w-auto object-contain animate-magika-reveal">
+  </div>
+</div>
+
+<div *ngIf="listaProductos.length > 0 || !loading" class="animate-fade-in">
+  
+  <app-navbar (onAgregar)="abrirModalNuevo()"></app-navbar>
+
+  <main class="pt-5 p-4 max-w-7xl mx-auto block"> 
+
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </span>
+        <input 
+          type="text" 
+          [(ngModel)]="terminoBusqueda"
+          (input)="filtrarProductos()"
+          placeholder="Buscar producto" 
+          class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 text-gray-700 rounded-2xl focus:ring-2 focus:ring-[#739883]/30 focus:border-[#739883] outline-none transition-all shadow-sm text-sm">
+      </div>
+    </div>
+
+    <div class="flex flex-nowrap items-center gap-x-6 mb-8 overflow-x-auto pb-4 scrollbar-hide">
+      <button 
+        (click)="seleccionarCategoria('Todas')"
+        class="text-[#739883] text-sm transition-all whitespace-nowrap decoration-[#739883] decoration-2 underline-offset-4 font-medium shrink-0"
+        [class.font-bold]="categoriaSeleccionada === 'Todas'"
+        [class.scale-105]="categoriaSeleccionada === 'Todas'"
+        [class.underline]="categoriaSeleccionada === 'Todas'"
+        [class.opacity-70]="categoriaSeleccionada !== 'Todas'"
+        [class.hover:opacity-100]="categoriaSeleccionada !== 'Todas'">
+        Todas
+      </button>
+      
+      <button 
+        *ngFor="let cat of categoriasUnicas"
+        (click)="seleccionarCategoria(cat)"
+        class="text-[#739883] text-sm transition-all whitespace-nowrap capitalize decoration-[#739883] decoration-2 underline-offset-4 font-medium shrink-0"
+        [class.font-bold]="categoriaSeleccionada === cat"
+        [class.scale-105]="categoriaSeleccionada === cat"
+        [class.underline]="categoriaSeleccionada === cat"
+        [class.opacity-70]="categoriaSeleccionada !== cat"
+        [class.hover:opacity-100]="categoriaSeleccionada !== cat">
+        {{ cat }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+      <app-card-producto 
+        *ngFor="let p of listaFiltrada" 
+        [infoProducto]="p"
+        (editar)="abrirModalEditar($event)"
+        (borrar)="borradoProducto($event)"> 
+      </app-card-producto>
+    </div>
+
+    <div *ngIf="listaFiltrada.length === 0 && !loading" class="text-center py-20 text-gray-400">
+      <p class="text-lg font-medium italic">No se encontraron productos en esta sección.</p>
+    </div>
+  </main>
+
+  <app-formulario-producto 
+    *ngIf="mostrarModal" 
+    [productoEditar]="productoSeleccionado"
+    (cerrarModal)="cerrarModal()"
+    (productoAgregado)="obtenerProductos()">
+  </app-formulario-producto>
+</div>

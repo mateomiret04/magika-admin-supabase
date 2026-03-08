@@ -1,0 +1,71 @@
+<div class="relative min-h-screen flex flex-col items-center justify-start sm:justify-center bg-[#739883] overflow-hidden">
+  
+  <div class="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent pointer-events-none h-full"></div>
+
+  <div class="relative z-10 w-full flex flex-col items-center min-h-screen sm:min-h-fit">
+    
+    <div class="w-full flex justify-center py-8 sm:py-6">
+      <img src="18.png" alt="Logo Magika" class="h-32 w-auto object-contain drop-shadow-sm">
+    </div>
+
+    <div class="w-full sm:max-w-md bg-white p-8 sm:p-10 rounded-t-[3rem] sm:rounded-2xl shadow-2xl flex-grow sm:flex-grow-0 min-h-[60vh] sm:min-h-0">
+      
+      <div class="text-left mb-10 mt-4 sm:mt-0">
+        <h2 class="text-4xl text-gray-400 font-light leading-none">Hola!</h2>
+        <p class="text-2xl text-gray-400 font-light mt-1">Bienvenido/a</p>
+      </div>
+      
+      <form (ngSubmit)="onLogin()" class="space-y-6" autocomplete="off">
+        <div>
+          <label class="block text-sm font-medium text-gray-500 mb-1 ml-1">Usuario</label>
+          <input 
+            type="text" 
+            name="usuario_magika" 
+            [(ngModel)]="usuario" 
+            required
+            class="w-full px-5 py-4 sm:py-3 border border-gray-100 bg-gray-50 rounded-2xl focus:ring-2 focus:ring-[#739883]/30 focus:border-[#739883] outline-none transition-all text-gray-700"
+            placeholder="Ingresá tu usuario">
+        </div>
+
+        <div class="relative"> 
+          <label class="block text-sm font-medium text-gray-500 mb-1 ml-1">Contraseña</label>
+          <div class="relative">
+            <input 
+              [type]="verClave ? 'text' : 'password'" 
+              name="clave_magika" 
+              [(ngModel)]="clave" 
+              required
+              class="w-full px-5 py-4 sm:py-3 border border-gray-100 bg-gray-50 rounded-2xl focus:ring-2 focus:ring-[#739883]/30 focus:border-[#739883] outline-none transition-all text-gray-700 pr-12"
+              placeholder="Ingresá tu contraseña">
+            
+            <button 
+              type="button"
+              (click)="toggleVerClave()"
+              class="absolute right-4 bottom-[14px] text-gray-400 hover:text-[#739883] transition-colors focus:outline-none">
+              
+              <svg *ngIf="verClave" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.483 8.612 7.058 6.25 12 6.25c4.942 0 8.517 2.362 9.964 5.428.061.129.061.272 0 .401-1.447 3.066-5.022 5.428-9.964 5.428-4.942 0-8.517-2.362-9.964-5.428ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+
+              <svg *ngIf="!verClave" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-6 flex justify-center">
+          <button type="submit" class="w-full sm:w-3/4 bg-[#739883] text-white py-4 sm:py-3 rounded-3xl font-medium hover:bg-[#5f7d6c] shadow-lg active:scale-95 transition-all">
+            Entrar
+          </button>
+        </div>
+      
+        <div class="mt-12 sm:mt-8 text-center pb-4">
+          <p class="text-[10px] text-gray-400 tracking-[0.2em] uppercase">Magika Deco | Admin</p>
+        </div>
+    
+      </form>
+    </div>
+  </div>
+</div>

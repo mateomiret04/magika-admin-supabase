@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from './navbar/navbar.component';
 import { CardProductoComponent } from './card-producto/card-producto.component';
 import { FormularioProductoComponent } from './formulario-producto/formulario-producto'; 
-import { SupabaseService } from '../../services/supabase'; // Cambiado al nuevo servicio
+import { ProductoService } from '../../services/producto.service'; // Cambiado al servicio optimizado
 
 @Component({
   selector: 'app-productos',
@@ -19,24 +19,20 @@ import { SupabaseService } from '../../services/supabase'; // Cambiado al nuevo 
   templateUrl: './productos.component.html',
 })
 export class Productos implements OnInit {
-  // Datos originales de Supabase
   listaProductos: any[] = []; 
-  // Datos que se muestran tras aplicar filtros
   listaFiltrada: any[] = []; 
   
-  // Control de Modales y Cargas
   mostrarModal: boolean = false; 
   productoSeleccionado: any = null; 
   loading: boolean = true; 
   isFirstLoad: boolean = true; 
 
-  // Variables de Filtro
   terminoBusqueda: string = '';
   categoriasUnicas: string[] = [];
   categoriaSeleccionada: string = 'Todas';
 
   constructor(
-    private _supabaseService: SupabaseService, // Inyectamos Supabase
+    private _productoService: ProductoService, // Usamos el servicio con herramientas de Storage
     private _cdr: ChangeDetectorRef 
   ) {}
 
@@ -44,38 +40,36 @@ export class Productos implements OnInit {
     this.obtenerProductos();
   }
 
-  // Cambiado a async para manejar la promesa de Supabase
   async obtenerProductos() {
     if (this.isFirstLoad) {
       this.loading = true;
     }
 
-    try {
-      const data = await this._supabaseService.obtenerProductos();
-      this.listaProductos = data || [];
-      
-      // 1. Extraemos las categorías
-      this.extraerCategorias();
-      
-      // 2. Aplicamos los filtros
-      this.filtrarProductos();
-      
-      if (this.isFirstLoad) {
-        setTimeout(() => {
+    // Usamos subscribe porque el servicio devuelve Observable (vía from)
+    this._productoService.getListProductos().subscribe({
+      next: (data) => {
+        this.listaProductos = data || [];
+        this.extraerCategorias();
+        this.filtrarProductos();
+        
+        if (this.isFirstLoad) {
+          setTimeout(() => {
+            this.loading = false;
+            this.isFirstLoad = false;
+            this._cdr.detectChanges(); 
+          }, 1500);
+        } else {
           this.loading = false;
-          this.isFirstLoad = false;
-          this._cdr.detectChanges(); 
-        }, 1500);
-      } else {
+          this._cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error("Error al conectar con Supabase:", err);
         this.loading = false;
+        this.isFirstLoad = false;
         this._cdr.detectChanges();
       }
-    } catch (err) {
-      console.error("Error al conectar con Supabase:", err);
-      this.loading = false;
-      this.isFirstLoad = false;
-      this._cdr.detectChanges();
-    }
+    });
   }
 
   extraerCategorias() {
@@ -106,22 +100,38 @@ export class Productos implements OnInit {
     });
   }
 
-  // Método de borrado adaptado a Supabase
+  // --- MÉTODO DE BORRADO SINCRONIZADO (DB + STORAGE) ---
   async borradoProducto(id: number) {
-    if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+    if (confirm('¿Estás seguro de que deseas eliminar este producto e imagen?')) {
       try {
-        await this._supabaseService.eliminarProducto(id);
-        console.log("Producto eliminado con éxito de Supabase");
-        // Refrescamos la lista
-        this.obtenerProductos();
+        // 1. Buscamos el producto localmente para obtener la URL de la imagen
+        const productoABorrar = this.listaProductos.find(p => p.id === id);
+        
+        if (productoABorrar && productoABorrar.imagen_url) {
+          console.log("Eliminando imagen del Storage...");
+          // 2. Borramos el archivo físico del Storage
+          await this._productoService.deleteImagenStorage(productoABorrar.imagen_url);
+        }
+
+        // 3. Borramos el registro de la Base de Datos
+        this._productoService.deleteProducto(id).subscribe({
+          next: () => {
+            console.log("Producto eliminado con éxito de la DB");
+            this.obtenerProductos(); // Refrescamos la lista
+          },
+          error: (err) => {
+            console.error("Error al borrar de la DB:", err);
+            alert("Error al eliminar el registro.");
+          }
+        });
+
       } catch (err) {
-        console.error("Error al intentar borrar el producto:", err);
-        alert("No se pudo eliminar el producto.");
+        console.error("Error en el proceso de borrado:", err);
+        alert("Hubo un problema al eliminar el archivo físico.");
       }
     }
   }
 
-  // Métodos de control del Modal
   abrirModalNuevo() {
     this.productoSeleccionado = null;
     this.mostrarModal = true;
@@ -135,7 +145,6 @@ export class Productos implements OnInit {
   cerrarModal() {
     this.mostrarModal = false;
     this.productoSeleccionado = null;
-    // Recargamos por si hubo cambios en el formulario
     this.obtenerProductos();
   }
 }

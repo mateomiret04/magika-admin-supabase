@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../services/supabase'; 
+import { ProductoService } from '../../../services/producto.service';
 
 @Component({
   selector: 'app-formulario-producto',
@@ -30,11 +30,10 @@ export class FormularioProductoComponent implements OnInit {
   @Output() cerrarModal = new EventEmitter<void>();
   @Output() productoAgregado = new EventEmitter<void>();
 
-  constructor(private _supabaseService: SupabaseService) {}
+  constructor(private _productoService: ProductoService) {}
 
   ngOnInit(): void {
     if (this.productoEditar) {
-      // Cargamos los datos existentes para editar
       this.nuevoProducto = { ...this.productoEditar };
     }
   }
@@ -49,7 +48,6 @@ export class FormularioProductoComponent implements OnInit {
       return;
     }
 
-    // Solo exigimos imagen si es un producto NUEVO
     if (!this.productoEditar && !this.archivoSeleccionado) {
       alert("Por favor, selecciona una imagen para el nuevo producto");
       return;
@@ -64,12 +62,22 @@ export class FormularioProductoComponent implements OnInit {
     try {
       let urlImagen = this.nuevoProducto.imagen_url;
 
-      // 1. Si el usuario eligió una foto nueva, la subimos
+      // --- PASO CLAVE: OPTIMIZACIÓN Y SUBIDA ---
       if (this.archivoSeleccionado) {
-        urlImagen = await this._supabaseService.subirImagen(this.archivoSeleccionado);
+        
+        // 1. LIMPIEZA: Si estamos editando y hay una foto previa, la borramos del storage
+        if (this.productoEditar && this.productoEditar.imagen_url) {
+          console.log("🧹 Borrando imagen anterior del storage para evitar duplicados...");
+          await this._productoService.deleteImagenStorage(this.productoEditar.imagen_url);
+        }
+        
+        // 2. Comprimimos el archivo en el cliente (Efecto Squoosh)
+        const imagenOptimizada = await this._productoService.comprimirImagen(this.archivoSeleccionado);
+        
+        // 3. Subimos el Blob optimizado al Storage
+        urlImagen = await this._productoService.uploadImagen(imagenOptimizada, this.nuevoProducto.nombre);
       }
 
-      // 2. Preparamos el objeto con los datos limpios
       const datosProducto = {
         nombre: this.nuevoProducto.nombre,
         precio_base: this.nuevoProducto.precio_base ?? 0,
@@ -80,20 +88,21 @@ export class FormularioProductoComponent implements OnInit {
         imagen_url: urlImagen 
       };
 
-      // 3. Lógica de Supabase: ¿Editar o Crear?
+      // --- LÓGICA DE PERSISTENCIA ---
       if (this.productoEditar && this.productoEditar.id) {
-        // ACTUALIZAR PRODUCTO EXISTENTE
-        await this._supabaseService.actualizarProducto(this.productoEditar.id, datosProducto);
-        console.log("Producto actualizado con éxito");
+        this._productoService.updateProducto(this.productoEditar.id, datosProducto).subscribe({
+          next: () => this.finalizarExito(),
+          error: (e) => this.finalizarError(e, "Error al actualizar")
+        });
       } else {
-        // CREAR PRODUCTO NUEVO
-        await this._supabaseService.crearProducto(datosProducto);
-        console.log("Producto creado con éxito");
+        this._productoService.postProducto(datosProducto).subscribe({
+          next: () => this.finalizarExito(),
+          error: (e) => this.finalizarError(e, "Error al crear")
+        });
       }
 
-      this.finalizarExito();
     } catch (error: any) {
-      this.finalizarError(error, "Error al procesar el producto en Supabase");
+      this.finalizarError(error, "Error al procesar la imagen u optimización");
     }
   }
 

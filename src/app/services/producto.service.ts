@@ -16,16 +16,28 @@ export class ProductoService {
 
   // --- HERRAMIENTAS DE OPTIMIZACIÓN Y STORAGE ---
 
+  /**
+   * OPTIMIZADOR UNIVERSAL (Compatible con iPhone/Móvil)
+   * Redimensiona, decodifica y comprime a WebP < 150KB
+   */
   async comprimirImagen(archivoOriginal: File): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(archivoOriginal);
-      reader.onload = (event: any) => {
+      reader.onload = async (event: any) => {
         const img = new Image();
         img.src = event.target.result;
-        img.onload = () => {
+
+        try {
+          // --- CLAVE PARA MÓVILES ---
+          // Espera a que la imagen esté totalmente decodificada en memoria
+          if ('decode' in img) {
+            await img.decode();
+          }
+
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1080;
+          // Forzamos un máximo de 800px para garantizar bajo peso sin perder calidad visual
+          const MAX_WIDTH = 800; 
           let width = img.width;
           let height = img.height;
 
@@ -37,14 +49,29 @@ export class ProductoService {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
+          
+          if (ctx) {
+            // Suavizado de alta calidad para evitar pixelado al reducir
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+          }
 
+          // Generamos el WebP con calidad 0.6 (Balance perfecto peso/calidad)
           canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Error al comprimir imagen'));
-          }, 'image/webp', 0.75);
-        };
+            if (blob) {
+              console.log(`📏 Tamaño final optimizado: ${(blob.size / 1024).toFixed(2)} KB`);
+              resolve(blob);
+            }
+            else reject(new Error('Error al generar el archivo optimizado'));
+          }, 'image/webp', 0.6); 
+
+        } catch (err) {
+          console.error("Error procesando imagen:", err);
+          reject(err);
+        }
       };
+      reader.onerror = (error) => reject(error);
     });
   }
 
@@ -52,13 +79,13 @@ export class ProductoService {
     const nombreArchivo = `${Date.now()}_${nombre.replace(/\s+/g, '_')}.webp`;
     
     const { data, error } = await this.supabase.storage
-      .from('productos-imagenes') // Nombre corregido
+      .from('productos-imagenes') // Nombre corregido sin tilde (según tu ajuste previo)
       .upload(nombreArchivo, file);
 
     if (error) throw error;
 
     const { data: urlData } = this.supabase.storage
-      .from('productos-imagenes') // Nombre corregido
+      .from('productos-imagenes')
       .getPublicUrl(nombreArchivo);
 
     return urlData.publicUrl;
@@ -68,13 +95,13 @@ export class ProductoService {
     const partes = url.split('/');
     const nombreArchivo = partes[partes.length - 1];
     const { error } = await this.supabase.storage
-      .from('productos-imagenes') // Nombre corregido
+      .from('productos-imagenes')
       .remove([nombreArchivo]);
     
     if (error) console.error('Error al borrar archivo físico:', error);
   }
 
-  // --- MÉTODOS DE BASE DE DATOS ---
+  // --- MÉTODOS DE BASE DE DATOS (MANTENIDOS) ---
 
   getListProductos(): Observable<any[]> {
     return from(

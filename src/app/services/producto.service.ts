@@ -14,12 +14,22 @@ export class ProductoService {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
-  // --- HERRAMIENTAS DE OPTIMIZACIÓN Y STORAGE ---
+  // --- HERRAMIENTAS DE LIMPIEZA ---
 
   /**
-   * OPTIMIZADOR UNIVERSAL (Compatible con iPhone/Móvil)
-   * Redimensiona, decodifica y comprime a WebP < 150KB
+   * Limpia el nombre del archivo eliminando tildes, espacios y caracteres especiales
    */
+  private limpiarNombre(texto: string): string {
+    return texto
+      .normalize('NFD')                  // Descompone tildes
+      .replace(/[\u0300-\u036f]/g, '')   // Elimina las tildes
+      .toLowerCase()                     // Todo a minúsculas por seguridad
+      .replace(/\s+/g, '_')              // Espacios por guiones bajos
+      .replace(/[^a-z0-9._-]/g, '');     // Elimina cualquier otro caracter raro
+  }
+
+  // --- HERRAMIENTAS DE OPTIMIZACIÓN Y STORAGE ---
+
   async comprimirImagen(archivoOriginal: File): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -29,14 +39,11 @@ export class ProductoService {
         img.src = event.target.result;
 
         try {
-          // --- CLAVE PARA MÓVILES ---
-          // Espera a que la imagen esté totalmente decodificada en memoria
           if ('decode' in img) {
             await img.decode();
           }
 
           const canvas = document.createElement('canvas');
-          // Forzamos un máximo de 800px para garantizar bajo peso sin perder calidad visual
           const MAX_WIDTH = 800; 
           let width = img.width;
           let height = img.height;
@@ -51,13 +58,11 @@ export class ProductoService {
           const ctx = canvas.getContext('2d');
           
           if (ctx) {
-            // Suavizado de alta calidad para evitar pixelado al reducir
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
           }
 
-          // Generamos el WebP con calidad 0.6 (Balance perfecto peso/calidad)
           canvas.toBlob((blob) => {
             if (blob) {
               console.log(`📏 Tamaño final optimizado: ${(blob.size / 1024).toFixed(2)} KB`);
@@ -76,11 +81,22 @@ export class ProductoService {
   }
 
   async uploadImagen(file: Blob, nombre: string): Promise<string> {
-    const nombreArchivo = `${Date.now()}_${nombre.replace(/\s+/g, '_')}.webp`;
+    // CORRECCIÓN PROFESIONAL: Limpiamos el nombre ANTES de crear el path
+    const nombreLimpio = this.limpiarNombre(nombre);
     
+    // Eliminamos la extensión original si viniera en el nombre para evitar .png.webp
+    const nombreSinExt = nombreLimpio.replace(/\.[^/.]+$/, "");
+    
+    const nombreArchivo = `${Date.now()}_${nombreSinExt}.webp`;
+    
+    console.log('🚀 Subiendo archivo con nombre seguro:', nombreArchivo);
+
     const { data, error } = await this.supabase.storage
-      .from('productos-imagenes') // Nombre corregido sin tilde (según tu ajuste previo)
-      .upload(nombreArchivo, file);
+      .from('productos-imagenes')
+      .upload(nombreArchivo, file, {
+        contentType: 'image/webp',
+        upsert: false
+      });
 
     if (error) throw error;
 
